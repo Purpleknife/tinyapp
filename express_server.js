@@ -12,9 +12,9 @@ const urlDatabase = {
 app.use(express.urlencoded({ extended: true }));
 
 app.post("/urls", (req, res) => {
-  const shortURLid = generateRandomString();
-  urlDatabase[shortURLid] = req.body.longURL;
-  res.redirect(`/urls/${shortURLid}`);
+  const id = generateRandomString();
+  urlDatabase[id] = req.body.longURL;
+  res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/new", (req, res) => {
