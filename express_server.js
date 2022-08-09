@@ -10,11 +10,12 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
-app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+app.post('/logout', (req, res) => { //Setup a /logout route.
+  res.clearCookie('username'); //Clear cookies when logout.
   res.redirect('/urls');
 })
 
@@ -40,11 +41,12 @@ app.post('/urls', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render urls_new.ejs
-  res.render('urls_new');
+  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
+  res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { username: req.cookies['username'], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
 
