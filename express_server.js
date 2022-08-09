@@ -39,7 +39,7 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 });
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { username: req.cookies['username'], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
 
@@ -49,7 +49,7 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
 });
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
