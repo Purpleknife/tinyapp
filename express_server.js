@@ -13,6 +13,11 @@ const urlDatabase = {
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+})
+
 app.post('/login', (req, res) => { //Setup a /login route.
   res.cookie('username', req.body.username);
   res.redirect('/urls');
@@ -39,7 +44,7 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 });
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
-  const templateVars = { username: req.cookies['username'], id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
 
