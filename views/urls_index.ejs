@@ -20,12 +20,12 @@
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
-        <strong><a href="#">Click here to shorten your URLs!</a></strong>
       <table class="table">
         <thead>
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -33,6 +33,11 @@
             <tr>
               <td><%= id %></td>
               <td><%= urls[id] %></td>
+              <td><form method="POST" action="/urls/9sm5xK/delete">
+                <div>
+                  <button type="button" class="btn btn-danger">Delete</button>
+                </div>
+              </form></td>
             </tr>
           <% } %>
         </tbody>
