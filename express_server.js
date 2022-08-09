@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post("/urls/:id/edit", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect(`/urls`);
+  res.redirect('/urls');
 });
 
 app.post("/urls/:id/delete", (req, res) => {
