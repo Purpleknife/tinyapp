@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080; //Default port 8080
 
@@ -10,6 +11,12 @@ const urlDatabase = {
 };
 
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
+app.use(cookieParser()); //Middleware to work with cookies.
+
+app.post('/login', (req, res) => { //Setup a /login route.
+  res.cookie('username', req.body.username);
+  res.redirect('/urls');
+});
 
 app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
   urlDatabase[req.params.id] = req.body.longURL;
