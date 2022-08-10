@@ -14,6 +14,11 @@ const urlDatabase = {
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
+app.get('/urls/register', (req, res) => { //Setup a route to show the registration page.
+  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
+  res.render('urls_register', templateVars);
+});
+
 app.post('/logout', (req, res) => { //Setup a /logout route.
   res.clearCookie('username'); //Clear cookies when logout.
   res.redirect('/urls');
