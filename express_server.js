@@ -27,6 +27,11 @@ const users = {
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
+app.get('/login', (req, res) => { //Setup a route to show the login page.
+  const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
+  res.render('urls_login', templateVars);
+})
+
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
   
   if (req.body.email === '' || req.body.password === '') {
@@ -42,7 +47,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     email: req.body.email,
     password: req.body.password
   }
-  console.log('object data', users);
+  //console.log('object data', users);
   res.cookie('user_id', randomID);
   res.redirect('/urls')
   return;
