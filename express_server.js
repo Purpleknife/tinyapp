@@ -40,7 +40,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
 });
 
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
-  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
+  const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_register', templateVars);
 });
 
@@ -71,12 +71,12 @@ app.post('/urls', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render urls_new.ejs
-  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
+  const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
-  const templateVars = { username: req.cookies['username'], id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { user: users[req.cookies['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
 
@@ -86,7 +86,7 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
 });
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
-  const templateVars = { username: req.cookies['username'], urls: urlDatabase };
+  const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
