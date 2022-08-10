@@ -10,11 +10,36 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
-app.get('/urls/register', (req, res) => { //Setup a route to show the registration page.
+app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
+  const randomID = generateRandomString();
+  users[randomID] = {
+    id: randomID,
+    email: req.body.email,
+    password: req.body.password
+  }
+  res.cookie('user_id', randomID);
+  console.log('object data', users);
+  res.redirect('/urls')
+});
+
+app.get('/register', (req, res) => { //Setup a route to show the registration page.
   const templateVars = { username: req.cookies['username'], urls: urlDatabase };
   res.render('urls_register', templateVars);
 });
