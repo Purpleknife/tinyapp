@@ -47,7 +47,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     email: req.body.email,
     password: req.body.password
   }
-  //console.log('object data', users);
+  console.log('object data', users);
   res.cookie('user_id', randomID);
   res.redirect('/urls')
   return;
@@ -64,8 +64,20 @@ app.post('/logout', (req, res) => { //Setup a /logout route.
 })
 
 app.post('/login', (req, res) => { //Setup a /login route.
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
+  const mightBeUser = userEmailLookup(req.body.email); //Might return null, might return users[user].
+  
+  if (mightBeUser === null) {
+    return res.status(403).send('This email is not registered.');
+  }
+  if (mightBeUser !== null) {
+    if (req.body.password !== mightBeUser.password) { //Because if email is found, userEmailLookup will return users[user].
+      return res.status(403).send('This password is incorrect.');
+    }
+
+    res.cookie('user_id', mightBeUser.id);
+    res.redirect('/urls');
+    return;
+  } 
 });
 
 app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
