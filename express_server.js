@@ -28,12 +28,15 @@ app.use(express.urlencoded({ extended: true })); //Middleware that translates th
 app.use(cookieParser()); //Middleware to work with cookies.
 
 app.get('/login', (req, res) => { //Setup a route to show the login page.
+  if (req.cookies['user_id']) { //If logged in, redirect.
+    res.redirect('/urls');
+  }
+  
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_login', templateVars);
 })
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
-  
   if (req.body.email === '' || req.body.password === '') {
     return res.status(400).send('Please enter a valid Email/ Password. The fields shouldn\'t be empty.');
   }
@@ -54,6 +57,10 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
 });
 
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
+  if (req.cookies['user_id']) { //If logged in, redirect.
+    res.redirect('/urls');
+  }
+  
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_register', templateVars);
 });
