@@ -30,22 +30,22 @@ app.use(cookieParser()); //Middleware to work with cookies.
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
   
   if (req.body.email === '' || req.body.password === '') {
-    res.status(400).send('Please enter a valid Email/ Password. The fields shouldn\'t be empty.');
+    return res.status(400).send('Please enter a valid Email/ Password. The fields shouldn\'t be empty.');
   }
   if (userEmailLookup(req.body.email) !== null) {
-    res.status(400).send('This email is already registered.');
+    return res.status(400).send('This email is already registered.');
   }
-  if (userEmailLookup(req.body.email) === null) {
+
   const randomID = generateRandomString();
   users[randomID] = {
     id: randomID,
     email: req.body.email,
     password: req.body.password
   }
-  //console.log('object data', users);
+  console.log('object data', users);
   res.cookie('user_id', randomID);
   res.redirect('/urls')
-  }
+  return;
 });
 
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
@@ -54,7 +54,7 @@ app.get('/register', (req, res) => { //Setup a route to show the registration pa
 });
 
 app.post('/logout', (req, res) => { //Setup a /logout route.
-  res.clearCookie('username'); //Clear cookies when logout.
+  res.clearCookie('user_id'); //Clear cookies when logout.
   res.redirect('/urls');
 })
 
