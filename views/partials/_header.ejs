@@ -19,11 +19,9 @@
       </div>
     </div>
     <% if (!user) { %>
-      <div class="text-right">
-        <form method="POST" action="/login">
-          <input type="text" id="email" name="email" placeholder="Email">
-          <button class="btn btn-outline-dark">Login</button>
-        </form>
+      <div class="text-inline">
+        <a class="btn btn-outline-dark" href="/login" role="button">Login</a>
+        <a class="btn btn-outline-dark" href="/register" role="button">Register</a>
       </div>
     <% } else { %>
       <div class="text-right">
