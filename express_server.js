@@ -35,7 +35,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     password: req.body.password
   }
   res.cookie('user_id', randomID);
-  console.log('object data', users);
+  //console.log('object data', users);
   res.redirect('/urls')
 });
 
