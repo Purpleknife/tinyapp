@@ -27,6 +27,7 @@ const users = {
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
 
+
 app.get('/login', (req, res) => { //Setup a route to show the login page.
   if (req.cookies['user_id']) { //If logged in, redirect.
     res.redirect('/urls');
@@ -34,7 +35,8 @@ app.get('/login', (req, res) => { //Setup a route to show the login page.
   
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_login', templateVars);
-})
+});
+
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
   if (req.body.email === '' || req.body.password === '') {
@@ -56,19 +58,23 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
   return;
 });
 
+
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
   if (req.cookies['user_id']) { //If logged in, redirect.
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
   
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_register', templateVars);
+  return;
 });
+
 
 app.post('/logout', (req, res) => { //Setup a /logout route.
   res.clearCookie('user_id'); //Clear cookies when logout.
   res.redirect('/urls');
-})
+});
+
 
 app.post('/login', (req, res) => { //Setup a /login route.
   const mightBeUser = userEmailLookup(req.body.email); //Might return null, might return users[user].
@@ -87,45 +93,64 @@ app.post('/login', (req, res) => { //Setup a /login route.
   } 
 });
 
+
 app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
   urlDatabase[req.params.id] = req.body.longURL;
   res.redirect('/urls'); //Redirection to /urls after submission.
 });
+
 
 app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete button.
   delete urlDatabase[req.params.id];
   res.redirect(`/urls`); //Redirection to /urls after clicking on the Delete button.
 });
 
+
 app.post('/urls', (req, res) => {
+  if (!req.cookies['user_id']) { //If not logged in, send error.
+    return res.status(400).send('Please login in order to shorten URLs.');
+  }
+
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL; //Save the id-longURL key-value pair to urlDatabase.
   res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
+  return;
 });
 
+
 app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render urls_new.ejs
+  if (!req.cookies['user_id']) { //If not logged in, redirect to /login.
+    return res.redirect('/login');
+  }
+  
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_new', templateVars);
+  return;
 });
+
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
   const templateVars = { user: users[req.cookies['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
 
+
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL); //Redirection from /u/:id to its longURL.
 });
+
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
   const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
+
 app.listen(PORT, () => {
   console.log(`TinyApp is listening on port ${PORT}!`);
 });
+
 
 const generateRandomString = function() {
   return (Math.random() + 1).toString(36).substring(6); //Returns a random string of 6 characters.
