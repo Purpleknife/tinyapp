@@ -28,15 +28,24 @@ app.use(express.urlencoded({ extended: true })); //Middleware that translates th
 app.use(cookieParser()); //Middleware to work with cookies.
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
+  
+  if (req.body.email === '' || req.body.password === '') {
+    res.status(400).send('Please enter a valid Email/ Password. The fields shouldn\'t be empty.');
+  }
+  if (userEmailLookup(req.body.email) !== null) {
+    res.status(400).send('This email is already registered.');
+  }
+  if (userEmailLookup(req.body.email) === null) {
   const randomID = generateRandomString();
   users[randomID] = {
     id: randomID,
     email: req.body.email,
     password: req.body.password
   }
-  res.cookie('user_id', randomID);
   //console.log('object data', users);
+  res.cookie('user_id', randomID);
   res.redirect('/urls')
+  }
 });
 
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
@@ -96,4 +105,13 @@ app.listen(PORT, () => {
 
 const generateRandomString = function() {
   return (Math.random() + 1).toString(36).substring(6); //Returns a random string of 6 characters.
+};
+
+const userEmailLookup = function(email) {
+  for (let user in users) {
+    if (users[user]['email'] === email) {
+      return users[user];
+    }
+  }
+  return null;
 };
