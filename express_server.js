@@ -136,8 +136,13 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
 
 
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
+  if (!urlDatabase[req.params.id]) { //If not logged in, redirect to /login.
+    return res.status(404).send('This page does not exist.');
+  }
+
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL); //Redirection from /u/:id to its longURL.
+  return;
 });
 
 
