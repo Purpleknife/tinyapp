@@ -86,7 +86,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     password: bcrypt.hashSync(req.body.password, 10)
   };
   
-  console.log('object data', users);
+  //console.log('object data', users);
   req.session.user_id = randomID;
   res.redirect('/urls');
   return;
@@ -105,7 +105,7 @@ app.get('/register', (req, res) => { //Setup a route to show the registration pa
 
 
 app.post('/logout', (req, res) => { //Setup a /logout route.
-  req.session.user_id = null; //Clear session cookies when logout.
+  req.session = null; //Clear session cookies when logout.
   res.redirect('/urls');
 });
 
