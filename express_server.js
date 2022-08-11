@@ -35,13 +35,13 @@ app.use(cookieParser()); //Middleware to work with cookies.
 
 
 app.post('/login', (req, res) => { //Setup a /login route.
-  const mightBeUser = userEmailLookup(req.body.email); //Might return null, might return users[user].
+  const mightBeUser = getUserByEmail(req.body.email); //Might return null, might return users[user].
   
   if (mightBeUser === null) {
     return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
   }
   if (mightBeUser !== null) {
-    if (req.body.password !== mightBeUser.password) { //Because if email is found, userEmailLookup will return users[user].
+    if (req.body.password !== mightBeUser.password) { //Because if email is found, getUserByEmail will return users[user].
       return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
     }
 
@@ -67,7 +67,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
   if (req.body.email === '' || req.body.password === '') {
     return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
   }
-  if (userEmailLookup(req.body.email) !== null) {
+  if (getUserByEmail(req.body.email) !== null) {
     return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
   }
 
@@ -221,7 +221,7 @@ const generateRandomString = function() {
   return (Math.random() + 1).toString(36).substring(6); //Returns a random string of 6 characters.
 };
 
-const userEmailLookup = function(email) { //To check if email exists in users object.
+const getUserByEmail = function(email) { //To check if email exists in users object.
   for (let user in users) {
     if (users[user]['email'] === email) {
       return users[user];
