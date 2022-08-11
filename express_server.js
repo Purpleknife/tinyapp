@@ -146,8 +146,13 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
+  if (!req.cookies['user_id']) { //If not logged in, send error.
+    return res.status(400).send('Please log in or register to access your shortened URLs.');
+  }
+ 
   const templateVars = { user: users[req.cookies['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id].longURL };
   res.render('urls_show', templateVars);
+  return;
 });
 
 
@@ -163,8 +168,14 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
 
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
-  const templateVars = { user: users[req.cookies['user_id']], urls: urlDatabase };
+  if (!req.cookies['user_id']) { //If not logged in, send error.
+    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+  }
+
+  const userURLDatabase = urlsForUser(req.cookies['user_id']);  
+  const templateVars = { user: users[req.cookies['user_id']], urls: userURLDatabase };
   res.render('urls_index', templateVars);
+  return;
 });
 
 
@@ -184,4 +195,15 @@ const userEmailLookup = function(email) { //To check if email exists in users ob
     }
   }
   return null;
+};
+
+const urlsForUser = function(id) {
+  let urls = {};
+
+  for (let user in urlDatabase) {
+    if (urlDatabase[user].userID === id) {
+      urls[user] = urlDatabase[user].longURL;
+    }
+  }
+  return urls;
 };
