@@ -1,8 +1,11 @@
 const express = require('express');
-const cookieSession = require('cookie-session');
-const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; //Default port 8080
+
+const cookieSession = require('cookie-session');
+const bcrypt = require("bcryptjs");
+
+const { generateRandomString, getUserByEmail, urlsForUser } = require('./helpers');
 
 app.set('view engine', 'ejs'); //To use EJS templates.
 
@@ -35,8 +38,6 @@ app.use(express.urlencoded({ extended: true })); //Middleware that translates th
 app.use(cookieSession({ //Middleware to work with encrypted cookies.
   name: 'session',
   keys: ['superDuperSecretKey'],
-
-  // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
@@ -119,7 +120,7 @@ app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id'], urlDatabase); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
     return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
@@ -141,7 +142,7 @@ app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete butt
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id'], urlDatabase); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
     return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
@@ -187,7 +188,7 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id'], urlDatabase); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
     return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
@@ -214,7 +215,7 @@ app.get('/urls', (req, res) => { //Link the object templateVars to the template 
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const userURLDatabase = urlsForUser(req.session['user_id']);
+  const userURLDatabase = urlsForUser(req.session['user_id'], urlDatabase);
   const templateVars = { user: users[req.session['user_id']], urls: userURLDatabase };
   res.render('urls_index', templateVars);
   return;
@@ -224,28 +225,3 @@ app.get('/urls', (req, res) => { //Link the object templateVars to the template 
 app.listen(PORT, () => {
   console.log(`TinyApp is listening on port ${PORT}!`);
 });
-
-
-const generateRandomString = function() {
-  return (Math.random() + 1).toString(36).substring(6); //Returns a random string of 6 characters.
-};
-
-const getUserByEmail = function(email, database) { //To check if email exists in users object.
-  for (let user in database) {
-    if (database[user]['email'] === email) {
-      return database[user];
-    }
-  }
-  return null;
-};
-
-const urlsForUser = function(id) {
-  let urls = {};
-
-  for (let user in urlDatabase) {
-    if (urlDatabase[user].userID === id) {
-      urls[user] = urlDatabase[user].longURL;
-    }
-  }
-  return urls;
-};
