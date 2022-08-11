@@ -1,5 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; //Default port 8080
 
@@ -20,18 +21,19 @@ const users = {
   b2xVn2: {
     id: 'aJ48lW',
     email: 'user@example.com',
-    password: 'purple-monkey-dinosaur',
+    password: bcrypt.hashSync('purple-monkey-dinosaur', 10),
   },
   i3BoGr: {
     id: 'i3BoGr',
     email: 'user2@example.com',
-    password: 'dishwasher-funk',
+    password: bcrypt.hashSync('dishwasher-funk', 10),
   },
 };
 
-
+app.use('/images', express.static('images')); //Middleware for the favicon.
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieParser()); //Middleware to work with cookies.
+
 
 
 app.post('/login', (req, res) => { //Setup a /login route.
@@ -41,10 +43,10 @@ app.post('/login', (req, res) => { //Setup a /login route.
     return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
   }
   if (mightBeUser !== null) {
-    if (req.body.password !== mightBeUser.password) { //Because if email is found, getUserByEmail will return users[user].
+    if (!bcrypt.compareSync(req.body.password, mightBeUser.password)) { //Because if email is found, getUserByEmail will return users[user].
       return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
     }
-
+    
     res.cookie('user_id', mightBeUser.id);
     res.redirect('/urls');
     return;
@@ -75,9 +77,10 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
   users[randomID] = {
     id: randomID,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
-  console.log('object data', users);
+  
+  //console.log('object data', users);
   res.cookie('user_id', randomID);
   res.redirect('/urls');
   return;
@@ -152,7 +155,7 @@ app.post('/urls', (req, res) => {
     longURL: req.body.longURL,
     userID: req.cookies['user_id']
   };
-  //console.log('database from /urls', urlDatabase);
+  
   res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
   return;
 });
