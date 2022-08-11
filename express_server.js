@@ -54,7 +54,7 @@ app.post('/login', (req, res) => { //Setup a /login route.
       return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
     }
     
-    req.session.user_id = mightBeUser.id;
+    req.session['user_id'] = mightBeUser.id;
     res.redirect('/urls');
     return;
   }
@@ -88,7 +88,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
   };
   
   //console.log('object data', users);
-  req.session.user_id = randomID;
+  req.session['user_id'] = randomID;
   res.redirect('/urls');
   return;
 });
