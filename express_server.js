@@ -43,7 +43,7 @@ app.use(cookieSession({ //Middleware to work with encrypted cookies.
 
 
 app.post('/login', (req, res) => { //Setup a /login route.
-  const mightBeUser = getUserByEmail(req.body.email); //Might return null, might return users[user].
+  const mightBeUser = getUserByEmail(req.body.email, users); //Might return null, might return users[user].
   
   if (mightBeUser === null) {
     return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
@@ -75,7 +75,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
   if (req.body.email === '' || req.body.password === '') {
     return res.render('errors/urls_400badRequest', { user: users[req.session['user_id']] });
   }
-  if (getUserByEmail(req.body.email) !== null) {
+  if (getUserByEmail(req.body.email, users) !== null) {
     return res.render('errors/urls_400badRequest', { user: users[req.session['user_id']] });
   }
 
@@ -230,10 +230,10 @@ const generateRandomString = function() {
   return (Math.random() + 1).toString(36).substring(6); //Returns a random string of 6 characters.
 };
 
-const getUserByEmail = function(email) { //To check if email exists in users object.
-  for (let user in users) {
-    if (users[user]['email'] === email) {
-      return users[user];
+const getUserByEmail = function(email, database) { //To check if email exists in users object.
+  for (let user in database) {
+    if (database[user]['email'] === email) {
+      return database[user];
     }
   }
   return null;
