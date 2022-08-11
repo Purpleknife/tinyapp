@@ -1,5 +1,5 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; //Default port 8080
@@ -32,7 +32,13 @@ const users = {
 
 app.use('/images', express.static('images')); //Middleware for the favicon.
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
-app.use(cookieParser()); //Middleware to work with cookies.
+app.use(cookieSession({ //Middleware to work with encrypted cookies.
+  name: 'session',
+  keys: ['superDuperSecretKey'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 
 
@@ -40,14 +46,14 @@ app.post('/login', (req, res) => { //Setup a /login route.
   const mightBeUser = getUserByEmail(req.body.email); //Might return null, might return users[user].
   
   if (mightBeUser === null) {
-    return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
+    return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
   }
   if (mightBeUser !== null) {
     if (!bcrypt.compareSync(req.body.password, mightBeUser.password)) { //Because if email is found, getUserByEmail will return users[user].
-      return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
+      return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
     }
     
-    res.cookie('user_id', mightBeUser.id);
+    req.session.user_id = mightBeUser.id;
     res.redirect('/urls');
     return;
   }
@@ -55,11 +61,11 @@ app.post('/login', (req, res) => { //Setup a /login route.
 
 
 app.get('/login', (req, res) => { //Setup a route to show the login page.
-  if (req.cookies['user_id']) { //If logged in, redirect.
+  if (req.session['user_id']) { //If logged in, redirect.
     return res.redirect('/urls');
   }
   
-  const templateVars = { user: users[req.cookies['user_id']] };
+  const templateVars = { user: users[req.session['user_id']] };
   res.render('urls_login', templateVars);
   return;
 });
@@ -67,10 +73,10 @@ app.get('/login', (req, res) => { //Setup a route to show the login page.
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
   if (req.body.email === '' || req.body.password === '') {
-    return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
+    return res.render('errors/urls_400badRequest', { user: users[req.session['user_id']] });
   }
   if (getUserByEmail(req.body.email) !== null) {
-    return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
+    return res.render('errors/urls_400badRequest', { user: users[req.session['user_id']] });
   }
 
   const randomID = generateRandomString();
@@ -80,47 +86,47 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     password: bcrypt.hashSync(req.body.password, 10)
   };
   
-  //console.log('object data', users);
-  res.cookie('user_id', randomID);
+  console.log('object data', users);
+  req.session.user_id = randomID;
   res.redirect('/urls');
   return;
 });
 
 
 app.get('/register', (req, res) => { //Setup a route to show the registration page.
-  if (req.cookies['user_id']) { //If logged in, redirect.
+  if (req.session['user_id']) { //If logged in, redirect.
     return res.redirect('/urls');
   }
   
-  const templateVars = { user: users[req.cookies['user_id']] };
+  const templateVars = { user: users[req.session['user_id']] };
   res.render('urls_register', templateVars);
   return;
 });
 
 
 app.post('/logout', (req, res) => { //Setup a /logout route.
-  res.clearCookie('user_id'); //Clear cookies when logout.
+  req.session.user_id = null; //Clear session cookies when logout.
   res.redirect('/urls');
 });
 
 
 app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
-    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
 
-  if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
   
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
-    userID: req.cookies['user_id']
+    userID: req.session['user_id']
   };
   return res.redirect('/urls'); //Redirection to /urls after submission.
 });
@@ -128,16 +134,16 @@ app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
 
 app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
-    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
 
-  if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
   
   delete urlDatabase[req.params.id];
@@ -146,14 +152,14 @@ app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete butt
 
 
 app.post('/urls', (req, res) => {
-  if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
   const id = generateRandomString(); //Save the id-longURL key-value pair to urlDatabase.
   urlDatabase[id] = {
     longURL: req.body.longURL,
-    userID: req.cookies['user_id']
+    userID: req.session['user_id']
   };
   
   res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
@@ -162,11 +168,11 @@ app.post('/urls', (req, res) => {
 
 
 app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render urls_new.ejs
-  if (!req.cookies['user_id']) { //If not logged in, redirect to /login.
+  if (!req.session['user_id']) { //If not logged in, redirect to /login.
     return res.redirect('/login');
   }
   
-  const templateVars = { user: users[req.cookies['user_id']] };
+  const templateVars = { user: users[req.session['user_id']] };
   res.render('urls_new', templateVars);
   return;
 });
@@ -174,19 +180,19 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
   if (!urlDatabase[req.params.id]) {
-    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
   
-  if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
+  const urls = urlsForUser(req.session['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
  
-  const templateVars = { user: users[req.cookies['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id].longURL };
+  const templateVars = { user: users[req.session['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id].longURL };
   res.render('urls_show', templateVars);
   return;
 });
@@ -194,7 +200,7 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
 
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   if (!urlDatabase[req.params.id]) {
-    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
 
   const longURL = urlDatabase[req.params.id].longURL;
@@ -204,12 +210,12 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
 
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
-  if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  const userURLDatabase = urlsForUser(req.cookies['user_id']);
-  const templateVars = { user: users[req.cookies['user_id']], urls: userURLDatabase };
+  const userURLDatabase = urlsForUser(req.session['user_id']);
+  const templateVars = { user: users[req.session['user_id']], urls: userURLDatabase };
   res.render('urls_index', templateVars);
   return;
 });
