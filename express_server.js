@@ -38,11 +38,11 @@ app.post('/login', (req, res) => { //Setup a /login route.
   const mightBeUser = userEmailLookup(req.body.email); //Might return null, might return users[user].
   
   if (mightBeUser === null) {
-    return res.status(403).send('This email is not registered.');
+    return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
   }
   if (mightBeUser !== null) {
     if (req.body.password !== mightBeUser.password) { //Because if email is found, userEmailLookup will return users[user].
-      return res.status(403).send('This password is incorrect.');
+      return res.render('errors/urls_403forbidden', { user: users[req.cookies['user_id']] });
     }
 
     res.cookie('user_id', mightBeUser.id);
@@ -65,10 +65,10 @@ app.get('/login', (req, res) => { //Setup a route to show the login page.
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
   if (req.body.email === '' || req.body.password === '') {
-    return res.status(400).send('Please enter a valid Email/ Password. The fields shouldn\'t be empty.');
+    return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
   }
   if (userEmailLookup(req.body.email) !== null) {
-    return res.status(400).send('This email is already registered.');
+    return res.render('errors/urls_400badRequest', { user: users[req.cookies['user_id']] });
   }
 
   const randomID = generateRandomString();
@@ -77,7 +77,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     email: req.body.email,
     password: req.body.password
   };
-  //console.log('object data', users);
+  console.log('object data', users);
   res.cookie('user_id', randomID);
   res.redirect('/urls');
   return;
@@ -103,16 +103,16 @@ app.post('/logout', (req, res) => { //Setup a /logout route.
 
 app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
-    return res.render('urls_notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
   }
 
   if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
   }
 
   const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
   }
   
   urlDatabase[req.params.id] = {
@@ -125,16 +125,16 @@ app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
 
 app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
-    return res.render('urls_notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
   }
 
   if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
   }
 
   const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
   }
   
   delete urlDatabase[req.params.id];
@@ -144,7 +144,7 @@ app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete butt
 
 app.post('/urls', (req, res) => {
   if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
   }
 
   const id = generateRandomString(); //Save the id-longURL key-value pair to urlDatabase.
@@ -171,16 +171,16 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 
 app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
   if (!urlDatabase[req.params.id]) {
-    return res.render('urls_notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
   }
   
   if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
   }
 
   const urls = urlsForUser(req.cookies['user_id']); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
-    return res.render('urls_wrongUser', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_wrongUser', { user: users[req.cookies.user_id] });
   }
  
   const templateVars = { user: users[req.cookies['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id].longURL };
@@ -191,7 +191,7 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
 
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   if (!urlDatabase[req.params.id]) {
-    return res.render('urls_notFound', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_404notFound', { user: users[req.cookies.user_id] });
   }
 
   const longURL = urlDatabase[req.params.id].longURL;
@@ -202,7 +202,7 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
 
 app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
   if (!req.cookies['user_id']) { //If not logged in, send error.
-    return res.render('urls_accessError', { user: users[req.cookies.user_id] });
+    return res.render('errors/urls_accessError', { user: users[req.cookies.user_id] });
   }
 
   const userURLDatabase = urlsForUser(req.cookies['user_id']);
