@@ -26,7 +26,7 @@
         <div class="card-header" style="color:grey">
           <div class="card-body">
             <h4 class="card-title" style="color:grey">Edit</h4>
-              <form method="POST" action="/urls/<%= id %>/edit">
+              <form method="POST" action="/urls/<%= id %>?_method=PUT">
                 <strong><label for="longURL">New URL:</label></strong>
                   <input type="text" id="longURL" name="longURL" placeholder="http://www.example.edu/">
                   <button class="btn btn-info">Submit</button>

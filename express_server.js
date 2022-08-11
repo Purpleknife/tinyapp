@@ -4,6 +4,7 @@ const PORT = 8080; //Default port 8080
 
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
+const methodOverride = require('method-override');
 
 const { generateRandomString, getUserByEmail, urlsForUser } = require('./helpers');
 
@@ -40,6 +41,7 @@ app.use(cookieSession({ //Middleware to work with encrypted cookies.
   keys: ['superDuperSecretKey'],
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
+app.use(methodOverride('_method'));
 
 
 
@@ -111,7 +113,7 @@ app.post('/logout', (req, res) => { //Setup a /logout route.
 });
 
 
-app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
+app.put('/urls/:id/', (req, res) => { //Setup a route for the Edit button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
@@ -133,7 +135,7 @@ app.post('/urls/:id/edit', (req, res) => { //Setup a route for the Edit button.
 });
 
 
-app.post('/urls/:id/delete', (req, res) => { //Setup a route for the Delete button.
+app.delete('/urls/:id/', (req, res) => { //Setup a route for the Delete button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
