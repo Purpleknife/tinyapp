@@ -2,7 +2,7 @@
 
 //Returns a random string of 6 characters.
 const generateRandomString = function() {
-  return (Math.random() + 1).toString(36).substring(6);
+  return Math.random().toString(36).substring(2,8);
 };
 
 
@@ -21,9 +21,9 @@ const getUserByEmail = function(email, database) {
 const urlsForUser = function(id, database) {
   let urls = {};
 
-  for (let user in database) {
-    if (database[user].userID === id) {
-      urls[user] = database[user].longURL;
+  for (let shortURL in database) {
+    if (database[shortURL].userID === id) {
+      urls[shortURL] = database[shortURL].longURL;
     }
   }
   return urls;
