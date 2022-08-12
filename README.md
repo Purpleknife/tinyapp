@@ -17,7 +17,7 @@ This project's goals were:
 - A glimpse on some Analytics in the `Edit` page:
   - Number of times a User visited the same short URL,
   - Number of visits to the same short URL from different Users,
-  - A log of the total visits with a Date and the User's ID.
+  - Total visits log with a Date, Time and the User's ID.
 
 
 ## Getting Started
