@@ -25,8 +25,8 @@ This project's goals were:
 - `git clone` this project.
 - Install all dependencies (using the `npm install` command).
 - Run the development web server using the `node express_server.js` command.
-- Run your tests using `npm test`.
 - Visit `http://localhost:8080/` on your browser.
+- Run your tests using `npm test`.
 
 
 ## Dependencies
@@ -36,7 +36,7 @@ This project's goals were:
 - EJS
 - bcryptjs
 - cookie-session
-- methode-override
+- method-override
 - chai
 - mocha
 
@@ -44,5 +44,5 @@ This project's goals were:
 ## Final Product
 
 !["Screenshot of 'Welcome' page"](https://github.com/Purpleknife/tinyapp/blob/master/docs/urls_welcome.png?raw=true)
-!["Screenshot description"](https://github.com/Purpleknife/tinyapp/blob/master/docs/urls_myURLs.png?raw=true)
+!["Screenshot of 'My URLs' page"](https://github.com/Purpleknife/tinyapp/blob/master/docs/urls_myURLs.png?raw=true)
 !["Screenshot of 'Create New URL' page"](https://github.com/Purpleknife/tinyapp/blob/master/docs/urls_create.png?raw=true)
