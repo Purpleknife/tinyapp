@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-const PORT = 8080; //Default port 8080
+const PORT = 8080;
+app.set('view engine', 'ejs');
 
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
@@ -8,14 +9,12 @@ const methodOverride = require('method-override');
 
 const { generateRandomString, getUserByEmail, urlsForUser } = require('./helpers');
 
-app.set('view engine', 'ejs'); //To use EJS templates.
-
 const urlDatabase = {
   b2xVn2: {
     longURL: 'http://www.lighthouselabs.ca',
     userID: 'aJ48lW',
-    uniqueVisitorID: [],
-    visitTimestamp: []
+    uniqueVisitorID: [], //Created to store id cookies for Analytics part.
+    visitTimestamp: [] //Created to store Date-userID pair for Analytics part.
   },
   i3BoGr: {
     longURL: 'http://www.google.com',
@@ -38,36 +37,60 @@ const users = {
   },
 };
 
+
+
 app.use('/images', express.static('images')); //Middleware for the favicon.
 app.use(express.urlencoded({ extended: true })); //Middleware that translates the request body.
 app.use(cookieSession({ //Middleware to work with encrypted cookies.
   name: 'session',
   keys: ['superDuperSecretKey'],
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  maxAge: 24 * 60 * 60 * 1000
 }));
-app.use(methodOverride('_method'));
+app.use(methodOverride('_method')); //Middleware to follow REST conventions.
 
 
 
-app.post('/login', (req, res) => { //Setup a /login route.
-  const mightBeUser = getUserByEmail(req.body.email, users); //Might return null, might return users[user].
-  
-  if (mightBeUser === null) {
-    return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
+app.get('/', (req, res) => { //Welcome page.
+  if (req.session['user_id']) {
+    return res.redirect('/urls');
   }
-  if (mightBeUser !== null) {
-    if (!bcrypt.compareSync(req.body.password, mightBeUser.password)) { //Because if email is found, getUserByEmail will return users[user].
-      return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
-    }
-    
-    req.session['user_id'] = mightBeUser.id;
-    // if (!cookieList.includes(req.session['user_id'])) {
-    //   cookieList.push(req.session['user_id']);
-    // }
-    res.redirect('/urls');
-    return;
-  }
+
+  const templateVars = { user: users[req.session['user_id']] };
+  return res.render('urls_mainPage', templateVars);
 });
+
+
+
+app.get('/urls', (req, res) => { //Setup route for /urls.
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
+  }
+
+  const userURLDatabase = urlsForUser(req.session['user_id'], urlDatabase);
+  const templateVars = { user: users[req.session['user_id']], urls: userURLDatabase };
+  res.render('urls_index', templateVars); //Link the object templateVars to the template urls_index.ejs
+  return;
+});
+
+
+
+app.post('/urls', (req, res) => {
+  if (!req.session['user_id']) { //If not logged in, send error.
+    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
+  }
+
+  const id = generateRandomString(); //Save the id-longURL key-value pair to urlDatabase.
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userID: req.session['user_id'],
+    uniqueVisitorID: [],
+    visitTimestamp: []
+  };
+
+  res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
+  return;
+});
+
 
 
 app.get('/login', (req, res) => { //Setup a route to show the login page.
@@ -79,6 +102,38 @@ app.get('/login', (req, res) => { //Setup a route to show the login page.
   res.render('urls_login', templateVars);
   return;
 });
+
+
+
+app.post('/login', (req, res) => {
+  const mightBeUser = getUserByEmail(req.body.email, users); //Might return null, might return users[user].
+  
+  if (mightBeUser === null) {
+    return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
+  }
+  if (mightBeUser !== null) {
+    if (!bcrypt.compareSync(req.body.password, mightBeUser.password)) { //Because if email is found, getUserByEmail will return users[user].
+      return res.render('errors/urls_403forbidden', { user: users[req.session['user_id']] });
+    }
+    
+    req.session['user_id'] = mightBeUser.id;
+    res.redirect('/urls');
+    return;
+  }
+});
+
+
+
+app.get('/register', (req, res) => { //Setup a route to show the registration page.
+  if (req.session['user_id']) { //If logged in, redirect.
+    return res.redirect('/urls');
+  }
+  
+  const templateVars = { user: users[req.session['user_id']] };
+  res.render('urls_register', templateVars);
+  return;
+});
+
 
 
 app.post('/register', (req, res) => { //Setup a POST /register endpoint to handle the Registration page.
@@ -95,29 +150,19 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
   };
-  
-  console.log('object data', users);
+
   req.session['user_id'] = randomID;
   res.redirect('/urls');
   return;
 });
 
 
-app.get('/register', (req, res) => { //Setup a route to show the registration page.
-  if (req.session['user_id']) { //If logged in, redirect.
-    return res.redirect('/urls');
-  }
-  
-  const templateVars = { user: users[req.session['user_id']] };
-  res.render('urls_register', templateVars);
-  return;
-});
-
 
 app.post('/logout', (req, res) => { //Setup a /logout route.
   req.session = null; //Clear session cookies when logout.
   res.redirect('/urls');
 });
+
 
 
 app.put('/urls/:id/', (req, res) => { //Setup a route for the Edit button.
@@ -144,6 +189,7 @@ app.put('/urls/:id/', (req, res) => { //Setup a route for the Edit button.
 });
 
 
+
 app.delete('/urls/:id/', (req, res) => { //Setup a route for the Delete button.
   if (!urlDatabase[req.params.id]) { //If id doesn't exist.
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
@@ -163,25 +209,8 @@ app.delete('/urls/:id/', (req, res) => { //Setup a route for the Delete button.
 });
 
 
-app.post('/urls', (req, res) => {
-  if (!req.session['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
-  }
 
-  const id = generateRandomString(); //Save the id-longURL key-value pair to urlDatabase.
-  urlDatabase[id] = {
-    longURL: req.body.longURL,
-    userID: req.session['user_id'],
-    uniqueVisitorID: [],
-    visitTimestamp: []
-  };
-
-  res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
-  return;
-});
-
-
-app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render urls_new.ejs
+app.get('/urls/new', (req, res) => { //Setup a route to show the Create New URL Form/ render urls_new.ejs
   if (!req.session['user_id']) { //If not logged in, redirect to /login.
     return res.redirect('/login');
   }
@@ -192,8 +221,9 @@ app.get('/urls/new', (req, res) => { //Setup a route to show the Form/ render ur
 });
 
 
-app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the template urls_show.ejs
-  if (!urlDatabase[req.params.id]) {
+
+app.get('/urls/:id', (req, res) => {
+  if (!urlDatabase[req.params.id]) { //If id doesn't exist.
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
   
@@ -201,7 +231,7 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
-  if (!req.session.visits) { //To check number of visits of Short URL ID.
+  if (!req.session.visits) { //To check number of visits of Short URL ID (for Analytics part).
     req.session.visits = 0;
   }
 
@@ -218,30 +248,30 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
     uniqueVisits: urlDatabase[req.params.id]['uniqueVisitorID'].length,
     timestamp: urlDatabase[req.params.id]['visitTimestamp']
   };
+
   res.render('urls_show', templateVars);
   return;
 });
+
 
 
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   if (!urlDatabase[req.params.id]) {
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
   }
-  req.session.visits++; //Increments everytime a Short URL ID is visited.
 
+  req.session.visits++; //Increments everytime a Short URL ID is visited (for Analytics part).
 
   const loggedInUser = req.session['user_id'];
-  if (!urlDatabase[req.params.id]['uniqueVisitorID'].includes(loggedInUser)) {
+  if (!urlDatabase[req.params.id]['uniqueVisitorID'].includes(loggedInUser)) { //To store the id cookies whenever a user log in (for Analytics part).
     urlDatabase[req.params.id]['uniqueVisitorID'].push(loggedInUser);
   }
-  console.log('urlDatabase', urlDatabase);
-
 
   const date = new Date();
   const cookieList = urlDatabase[req.params.id]['uniqueVisitorID'];
   for (let uniqueVisitor of cookieList) {
     if (uniqueVisitor === req.session['user_id']) {
-      urlDatabase[req.params.id]['visitTimestamp'].push([date.toUTCString(), uniqueVisitor]);
+      urlDatabase[req.params.id]['visitTimestamp'].push([date.toUTCString(), uniqueVisitor]); //To store date-userID pairs whenever a user log in (for Analytics part).
     }
   }
 
@@ -250,17 +280,6 @@ app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   return;
 });
 
-
-app.get('/urls', (req, res) => { //Link the object templateVars to the template urls_index.ejs
-  if (!req.session['user_id']) { //If not logged in, send error.
-    return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
-  }
-
-  const userURLDatabase = urlsForUser(req.session['user_id'], urlDatabase);
-  const templateVars = { user: users[req.session['user_id']], urls: userURLDatabase };
-  res.render('urls_index', templateVars);
-  return;
-});
 
 
 app.listen(PORT, () => {
