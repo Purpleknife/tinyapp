@@ -14,10 +14,14 @@ const urlDatabase = {
   b2xVn2: {
     longURL: 'http://www.lighthouselabs.ca',
     userID: 'aJ48lW',
+    uniqueVisitorID: [],
+    visitTimestamp: []
   },
   i3BoGr: {
     longURL: 'http://www.google.com',
     userID: 'aJ48lW',
+    uniqueVisitorID: [],
+    visitTimestamp: []
   },
 };
 
@@ -57,6 +61,9 @@ app.post('/login', (req, res) => { //Setup a /login route.
     }
     
     req.session['user_id'] = mightBeUser.id;
+    // if (!cookieList.includes(req.session['user_id'])) {
+    //   cookieList.push(req.session['user_id']);
+    // }
     res.redirect('/urls');
     return;
   }
@@ -89,7 +96,7 @@ app.post('/register', (req, res) => { //Setup a POST /register endpoint to handl
     password: bcrypt.hashSync(req.body.password, 10)
   };
   
-  //console.log('object data', users);
+  console.log('object data', users);
   req.session['user_id'] = randomID;
   res.redirect('/urls');
   return;
@@ -129,7 +136,9 @@ app.put('/urls/:id/', (req, res) => { //Setup a route for the Edit button.
   
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
-    userID: req.session['user_id']
+    userID: req.session['user_id'],
+    uniqueVisitorID: [],
+    visitTimestamp: []
   };
   return res.redirect('/urls'); //Redirection to /urls after submission.
 });
@@ -162,9 +171,11 @@ app.post('/urls', (req, res) => {
   const id = generateRandomString(); //Save the id-longURL key-value pair to urlDatabase.
   urlDatabase[id] = {
     longURL: req.body.longURL,
-    userID: req.session['user_id']
+    userID: req.session['user_id'],
+    uniqueVisitorID: [],
+    visitTimestamp: []
   };
-  
+
   res.redirect(`/urls/${id}`); //Redirection from /urls to /urls/:id
   return;
 });
@@ -190,12 +201,23 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
     return res.render('errors/urls_accessError', { user: users[req.session.user_id] });
   }
 
+  if (!req.session.visits) { //To check number of visits of Short URL ID.
+    req.session.visits = 0;
+  }
+
   const urls = urlsForUser(req.session['user_id'], urlDatabase); //Check if URL belongs to user.
   if (!Object.keys(urls).includes(req.params.id)) {
     return res.render('errors/urls_wrongUser', { user: users[req.session.user_id] });
   }
  
-  const templateVars = { user: users[req.session['user_id']], id: req.params.id, longURL: urlDatabase[req.params.id].longURL };
+  const templateVars = {
+    user: users[req.session['user_id']],
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id].longURL,
+    visits: req.session.visits,
+    uniqueVisits: urlDatabase[req.params.id]['uniqueVisitorID'].length,
+    timestamp: urlDatabase[req.params.id]['visitTimestamp']
+  };
   res.render('urls_show', templateVars);
   return;
 });
@@ -204,6 +226,23 @@ app.get('/urls/:id', (req, res) => { //Ship the object templateVars off to the t
 app.get('/u/:id', (req, res) => { //Handles shortURL (id) requests.
   if (!urlDatabase[req.params.id]) {
     return res.render('errors/urls_404notFound', { user: users[req.session.user_id] });
+  }
+  req.session.visits++; //Increments everytime a Short URL ID is visited.
+
+
+  const loggedInUser = req.session['user_id'];
+  if (!urlDatabase[req.params.id]['uniqueVisitorID'].includes(loggedInUser)) {
+    urlDatabase[req.params.id]['uniqueVisitorID'].push(loggedInUser);
+  }
+  console.log('urlDatabase', urlDatabase);
+
+
+  const date = new Date();
+  const cookieList = urlDatabase[req.params.id]['uniqueVisitorID'];
+  for (let uniqueVisitor of cookieList) {
+    if (uniqueVisitor === req.session['user_id']) {
+      urlDatabase[req.params.id]['visitTimestamp'].push([date.toUTCString(), uniqueVisitor]);
+    }
   }
 
   const longURL = urlDatabase[req.params.id].longURL;
