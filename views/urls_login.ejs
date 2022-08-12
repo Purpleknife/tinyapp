@@ -16,12 +16,11 @@
     />
 
     <title>Login Page</title>
-    <link rel="icon" type="image/png" href="/images/favicon.ico.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
   </head>
 
   <body>
     <%- include('partials/_header') %>
-
     <main style="margin: 1em;">
       <h3>Login</h3><br>
       <form class="form-group" action="/login" method="POST">
@@ -32,14 +31,16 @@
             name="email"
             placeholder="a@example.com"
             style="width: 300px;"
-          /><br>
+          />
+          <br/>
           <label for="password"><h6>Password:</h6></label>
           <input
             class="form-control"
             type="password"
             name="password"
             style="width: 300px;"
-          /><br>
+          />
+          <br/>
           <button type="submit" class="btn btn-info">Login</button>
       </form>
     </main>

@@ -9,7 +9,7 @@
       crossorigin="anonymous"
     />
     <title>URL - TinyApp</title>
-    <link rel="icon" type="image/png" href="/images/favicon.ico.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
   </head>
 
   <body>
@@ -25,8 +25,7 @@
         <h7 class="card-text" style="color:rgb(159, 236, 43)"><strong>Unique Short URL Visitors:</strong> <%= uniqueVisits %></h7>
 
       </div>
-      <div class="card-footer text-muted"></div>
-      
+      <div class="card-footer text-muted"></div>      
         <div class="card-header" style="color:grey">
           <div class="card-body">
             <h4 class="card-title" style="color:grey">Edit</h4>
@@ -36,12 +35,10 @@
                   <button class="btn btn-info">Submit</button>
               </form>
               <br/>
-
               <div class="row justify-content-center">
                 <div class="col-auto">
                   <table class="table table-responsive">
-
-                <table class="table">
+                  <table class="table">
                   <thead>
                     <tr>
                       <th scope="col" style="color:rgb(241, 153, 45)">Date of Visit</th>
@@ -51,18 +48,16 @@
                   <tbody>
                     <% for (let data of timestamp) { %>
                       <tr>
-
                         <td><%= data[0] %></td>
                         <td><%= data[1] %></td>
                       </tr>
                     <% } %>
                   </tbody>
-                </table>
-              </div>
-            </div>
-              
+                  </table>
+                </div>
+              </div> 
           </div>
-      </div>
+        </div>
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
