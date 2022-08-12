@@ -3,13 +3,13 @@ const { getUserByEmail, generateRandomString, urlsForUser } = require('../helper
 
 const testUsers = {
   'userRandomID': {
-    id: 'userRandomID', 
-    email: 'user@example.com', 
+    id: 'userRandomID',
+    email: 'user@example.com',
     password: 'purple-monkey-dinosaur'
   },
   'user2RandomID': {
-    id: 'user2RandomID', 
-    email: 'user2@example.com', 
+    id: 'user2RandomID',
+    email: 'user2@example.com',
     password: 'dishwasher-funk'
   }
 };
@@ -30,7 +30,7 @@ describe('getUserByEmail', function() {
   });
 
   it('should return undefined when given a non-existent email', function() {
-    const user = getUserByEmail('test@test.com', testUsers)
+    const user = getUserByEmail('test@test.com', testUsers);
     const expected = undefined;
     
     assert.equal(user, expected);
@@ -70,7 +70,7 @@ describe('urlsForUser', function() {
         longURL: 'http://www.example.edu',
         userID: 'userRandomID',
       },
-    };    
+    };
     
     const userUrls = urlsForUser('userRandomID', testDatabase);
     const expected = {
@@ -96,7 +96,7 @@ describe('urlsForUser', function() {
         longURL: 'http://www.example.edu',
         userID: 'userRandomID',
       },
-    };    
+    };
     
     const userUrls = urlsForUser('test@test.com', testDatabase);
     const expected = {};
